@@ -24,6 +24,7 @@ export default class PdftronWvInstance extends LightningElement {
   fullAPI = true;
   enableRedaction = true;
   enableFilePicker = true;
+  wvInstance = null;
 
   uiInitialized = false;
 
@@ -79,6 +80,7 @@ export default class PdftronWvInstance extends LightningElement {
   }
 
   handleFileSelected(file) {
+
     this.iframeWindow.postMessage({type: 'OPEN_DOCUMENT', file: file}, '*')
   }
 
@@ -96,7 +98,7 @@ export default class PdftronWvInstance extends LightningElement {
     });
   }
 
-  initUI() {
+  async initUI() {
     var myObj = {
       libUrl: libUrl,
       fullAPI: this.fullAPI || false,
@@ -119,6 +121,31 @@ export default class PdftronWvInstance extends LightningElement {
       enableOptimizedWorkers: true,
       l: 'demo:1687292108130:7d9e5a710300000000e28dbec6b9476e94429e6b469910fb9cfbeaa27b',
     }, viewerElement);
+
+
+    viewer.then((instance) => {
+      this.wvInstance = instance
+
+      const { documentViewer, annotationManager, Annotations } = instance.Core;
+
+      documentViewer.addEventListener('annotationsLoaded', () => {
+        const signatureWidgetAnnots = annotationManager.getAnnotationsList().filter(
+          annot => annot instanceof Annotations.SignatureWidgetAnnotation
+        );
+  
+        signatureWidgetAnnots.forEach(annot => {
+          annot.isSignedDigitally().then(isSigned => {
+            if (isSigned) {
+              alert("This document is signed!")
+              // if this signature field is signed initially
+            } else {
+              alert("This document is NOT signed!")
+              // if this signature field is not signed initially
+            }
+          });
+        });
+      });
+    })
 
     viewerElement.addEventListener('ready', () => {
       this.iframeWindow = viewerElement.querySelector('iframe').contentWindow;
