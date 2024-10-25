@@ -115,6 +115,9 @@ window.addEventListener('viewerLoaded', async function () {
     header.get('viewControlsButton').insertBefore(myCustomButton);
   });
 
+  instance.UI.enableFeatures([instance.UI.Feature.SideBySideView]);
+  instance.UI.enterMultiViewerMode();
+  
   // When the viewer has loaded, this makes the necessary call to get the
   // pdftronWvInstance code to pass User Record information to this config file
   // to invoke annotManager.setCurrentUser
@@ -124,20 +127,38 @@ window.addEventListener('viewerLoaded', async function () {
 window.addEventListener("message", receiveMessage, false);
 
 function receiveMessage(event) {
+  const [documentViewerOne, documentViewerTwo] = instance.Core.getDocumentViewers();
+
   if (event.isTrusted && typeof event.data === 'object') {
     switch (event.data.type) {
       case 'OPEN_DOCUMENT':
-        instance.UI.loadDocument(event.data.file, {
+        
+        documentViewerOne.loadDocument(event.data.file, {
           officeOptions: {
             disableBrowserFontSubstitution: true,
           }
         })
+
+        if(documentViewerTwo){
+          documentViewerTwo.loadDocument(event.data.file, {
+            officeOptions: {
+              disableBrowserFontSubstitution: true,
+            }
+          })
+        }
         break;
       case 'OPEN_DOCUMENT_BLOB':
         const { blob, extension, filename, documentId } = event.data.payload;
-        console.log("documentId", documentId);
+        
         currentDocId = documentId;
-        instance.UI.loadDocument(blob, { extension, filename, documentId })
+
+        documentViewerOne.loadDocument(blob, { extension, filename, documentId })
+
+        if(documentViewerTwo){
+          documentViewerTwo.loadDocument(blob, { extension, filename, documentId })
+        }
+        
+        console.log("documentId", documentId);
         break;
       case 'DOCUMENT_SAVED':
         console.log(`${JSON.stringify(event.data)}`);
@@ -147,10 +168,17 @@ function receiveMessage(event) {
         }, 2000)
         break;
       case 'LMS_RECEIVED':  
-        instance.UI.loadDocument(event.data.payload.message, {
+        documentViewerOne.loadDocument(event.data.payload.message, {
           filename: event.data.payload.filename,
           withCredentials: false
         });
+
+        if(documentViewerTwo){
+          documentViewerTwo.loadDocument(event.data.payload.message, {
+            filename: event.data.payload.filename,
+            withCredentials: false
+          });
+        }
         break;
       case 'DOWNLOAD_DOCUMENT':
         downloadWebViewerFile();
