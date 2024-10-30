@@ -128,6 +128,7 @@ function receiveMessage(event) {
     switch (event.data.type) {
       case 'OPEN_DOCUMENT':
         instance.UI.loadDocument(event.data.file, {
+          enableOfficeEditing: true,
           officeOptions: {
             disableBrowserFontSubstitution: true,
           }
@@ -137,7 +138,7 @@ function receiveMessage(event) {
         const { blob, extension, filename, documentId } = event.data.payload;
         console.log("documentId", documentId);
         currentDocId = documentId;
-        instance.UI.loadDocument(blob, { extension, filename, documentId })
+        instance.UI.loadDocument(blob, { extension, filename, documentId, enableOfficeEditing: true, })
         break;
       case 'DOCUMENT_SAVED':
         console.log(`${JSON.stringify(event.data)}`);
@@ -148,6 +149,7 @@ function receiveMessage(event) {
         break;
       case 'LMS_RECEIVED':  
         instance.UI.loadDocument(event.data.payload.message, {
+          enableOfficeEditing: true,
           filename: event.data.payload.filename,
           withCredentials: false
         });
