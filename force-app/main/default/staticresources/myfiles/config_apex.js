@@ -133,7 +133,7 @@ function receiveMessage(event) {
   if (event.isTrusted && typeof event.data === 'object') {
     switch (event.data.type) {
       case 'OPEN_DOCUMENT':
-        instance.UI.loadDocument(event.data.file)
+        instance.UI.loadDocument(event.data.file, { enableOfficeEditing: true })
         break;
       case 'OPEN_DOCUMENT_BLOB':
         const { blob, extension, filename, documentId } = event.data.payload;

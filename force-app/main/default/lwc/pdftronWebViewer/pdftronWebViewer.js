@@ -53,12 +53,8 @@ export default class PdftronWebViewer extends LightningElement {
     const viewer = new WebViewer.Iframe({
       path: libUrl, // path to the PDFTron 'lib' folder on your server
       custom: JSON.stringify(myObj),
-      backendType: 'ems',
       config: myfilesUrl + '/config_apex.js',
       fullAPI: this.fullAPI,
-      enableFilePicker: this.enableFilePicker,
-      enableRedaction: this.enableRedaction,
-      enableMeasurement: this.enableMeasurement,
       enableOptimizedWorkers: true,
       // l: 'YOUR_LICENSE_KEY_HERE',
     }, viewerElement);
