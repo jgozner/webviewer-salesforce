@@ -133,26 +133,27 @@ public with sharing class Apryse_ContentVersionController {
     //get single file from Id
     @AuraEnabled(Cacheable=true) 
     public static ContentVersionWrapper getFileDataFromId(String Id) {
-        try {
-            //CHANGED To 10MB for testing
-            Long max = 1024 * 1024 * 15; // kb - mb - 6 MB
-            ContentVersion cv = [SELECT Title, FileExtension, ContentSize, VersionData, ContentDocumentId, LastModifiedDate FROM ContentVersion WHERE Id = :Id];
-            ContentVersionWrapper cvw = new ContentVersionWrapper();
-
-            cvw.Id = cv.Id;
-            cvw.fileExtension = cv.FileExtension;
-            cvw.fileName = cv.Title + '.' + cv.FileExtension;
-
-            if(cv.ContentSize > max) {
-                cvw.url = 'https://3d4ba3477c0a.ngrok-free.app/file/'+ cv.Id;
-            }else{
-                cvw.body = EncodingUtil.base64Encode(cv.VersionData);
-            }
-
-            return cvw;
-        } catch(Exception e) {
-            throw new AuraHandledException(e.getMessage());
+      try {
+        Long max = 1024 * 1024 * 15; // 25 MB
+        ContentVersion cv = [SELECT Title, FileExtension, ContentSize, ContentDocumentId, LastModifiedDate FROM ContentVersion WHERE Id = :Id];
+        ContentVersionWrapper cvw = new ContentVersionWrapper();
+    
+        cvw.Id = cv.Id;
+        cvw.fileExtension = cv.FileExtension;
+        cvw.fileName = cv.Title + '.' + cv.FileExtension;
+    
+        if(cv.ContentSize < max) {
+          //Only query VersionData if size < 25 MB
+          ContentVersion cvData = [SELECT VersionData FROM ContentVersion WHERE Id = :Id];
+          cvw.body = EncodingUtil.base64Encode(cvData.VersionData);
+        }else{
+          cvw.url = 'https://3d4ba3477c0a.ngrok-free.app/file/'+ cv.Id;
         }
+    
+        return cvw;
+      } catch(Exception e) {
+          throw new AuraHandledException(e.getMessage());
+      }
     }
 
     @AuraEnabled
