@@ -137,19 +137,24 @@ window.addEventListener('viewerLoaded', async function () {
   instance.Core.documentViewer.getAnnotationManager().setCurrentUser(custom.username);
   instance.UI.enableFeatures([instance.UI.Feature.ContentEdit]);
 });
+
 window.addEventListener("message", receiveMessage, false);
 
 function receiveMessage(event) {
   if (event.isTrusted && typeof event.data === 'object') {
     switch (event.data.type) {
       case 'OPEN_DOCUMENT':
-        instance.UI.loadDocument(event.data.file)
+        instance.UI.loadDocument(event.data.file, { shouldUseMinimumDownloads: true })
         break;
       case 'OPEN_DOCUMENT_BLOB':
-        const { blobOrUrl, extension, filename, documentId } = event.data.payload;
-        console.log("documentId", documentId);
+        const { blobOrUrl, extension, filename, documentId, username, instanceUrl } = event.data.payload;
         currentDocId = documentId;
-        instance.UI.loadDocument(blobOrUrl, { extension, filename, documentId })
+        instance.UI.loadDocument(blobOrUrl, { 
+          customHeaders: {
+            'x-sfdc-instance-url': instanceUrl,
+            'x-sfdc-username': username,
+          },
+          shouldUseMinimumDownloads: true, extension, filename, documentId })
         break;
       case 'DOCUMENT_SAVED':
         console.log(`${JSON.stringify(event.data)}`);
@@ -160,6 +165,7 @@ function receiveMessage(event) {
         break;
       case 'LMS_RECEIVED':  
         instance.UI.loadDocument(event.data.payload.message, {
+          shouldUseMinimumDownloads: true,
           filename: event.data.payload.filename,
           withCredentials: false
         });

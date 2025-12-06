@@ -1,5 +1,6 @@
 import getUser from '@salesforce/apex/Apryse_ContentVersionController.getUser';
 import saveDocument from '@salesforce/apex/Apryse_ContentVersionController.saveDocument';
+import getUserInfo from '@salesforce/apex/Apryse_ContentVersionController.getUserInfo';
 import libUrl from '@salesforce/resourceUrl/lib';
 import myfilesUrl from '@salesforce/resourceUrl/myfiles';
 import { fireEvent, registerListener, unregisterAllListeners } from 'c/pubsub';
@@ -47,14 +48,16 @@ export default class ApryseWvInstance extends LightningElement {
     window.removeEventListener('message', this.handleReceiveMessage);
   }
 
-  handleBlobSelected(record) {
-    console.log("Record", record);
+  async handleBlobSelected(record) {
+    const userInfo  = await getUserInfo();
 
     const payload = {
       blobOrUrl: null,
       extension: record.fileExtension,
       filename: record.fileName,
-      documentId: record.Id
+      documentId: record.Id,
+      username: userInfo.username,
+      instanceUrl: userInfo.instanceUrl
     };
 
     if(record.url){
@@ -116,7 +119,7 @@ export default class ApryseWvInstance extends LightningElement {
       custom: JSON.stringify(myObj),
       backendType: 'ems',
       config: myfilesUrl + '/config_apex.js',
-      fullAPI: this.fullAPI,
+      fullAPI: false,
       enableFilePicker: this.enableFilePicker,
       enableRedaction: this.enableRedaction,
       enableMeasurement: this.enableMeasurement,

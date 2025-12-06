@@ -202,4 +202,88 @@ export default class WebViewer extends LightningElement {
     });
   }
 }
+
+```
+## Salesforce Setup
+
+### Step 1: Generate Certificate
+```bash
+# Generate private key
+openssl genrsa -out private.key 2048
+
+# Generate certificate signing request
+openssl req -new -key private.key -out certificate.csr
+
+# Generate self-signed certificate (valid for 1 year)
+openssl x509 -req -days 365 -in certificate.csr -signkey private.key -out certificate.crt
+```
+
+### Step 2: Create Connected App in Salesforce
+
+1. **Navigate to Setup → App Manager → New Connected App**
+
+2. **Basic Information:**
+   - Connected App Name: `File Server App`
+   - API Name: `File_Server_App`
+   - Contact Email: your-email@example.com
+
+3. **API (Enable OAuth Settings):**
+   - ✅ Enable OAuth Settings
+   - Callback URL: `https://localhost:3000/callback` (not used for JWT flow, but required)
+   - ✅ Use digital signatures
+   - Upload the `certificate.crt` file you generated
+   
+4. **Selected OAuth Scopes:** Add these scopes:
+   - Full access (full)
+   - Perform requests at any time (refresh_token, offline_access)
+   - Access content resources (content)
+   - Access and manage your data (api)
+
+5. **Save** and note down the **Consumer Key**, you'll need this for the proxy server.
+
+### Step 3: Configure Connected App Policies
+
+1. After saving, click **Manage**
+2. Click **Edit Policies**
+3. **Permitted Users:** Admin approved users are pre-authorized
+4. **IP Relaxation:** Relax IP restrictions. (For production you can lock this down)
+5. **Save**
+
+### Step 4: Create Permission Set and Assign Users
+
+1. **Setup → Permission Sets → New**
+   - Label: `File Access`
+   - Save
+
+2. **Connected App Access:**
+   - Click on the permission set
+   - Connected App Access → Edit
+   - Enable: `File_Server_App`
+   - Save
+
+3. **Assign to User:**
+   - Go to the permission set
+   - Manage Assignments → Add Assignments
+   - Select the user (username from your .env file)
+   - Save
+
+### Step 5: Pre-Authorize the User (Important!)
+
+1. Go to **Setup → Connected Apps → Manage Connected Apps**
+2. Click on your `File Server App`
+3. Under **Profiles** or **Permission Sets**, click **Manage**
+4. Add the appropriate profile or permission set
+
+### Step 2: Configure Environment Variables for Proxy Server
+
+Create a `.env` file (copy from `.env.example`):
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your values:
+```
+SF_PRIVATE_KEY_PATH=./certs/server.key
+SF_CONSUMER_KEY=your_consumer_key_from_connected_app
 ```

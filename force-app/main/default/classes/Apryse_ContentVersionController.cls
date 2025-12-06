@@ -130,25 +130,40 @@ public with sharing class Apryse_ContentVersionController {
         }
     }
 
+    @AuraEnabled(cacheable=false)
+    public static Map<String, String> getUserInfo() {
+        try {
+             return new Map<String, String>{
+                'username' => UserInfo.getUserName(),
+                'instanceUrl' => URL.getOrgDomainUrl().toExternalForm()
+            };
+        } catch (Exception e) {
+            throw new AuraHandledException('Error fetching session info: ' + e.getMessage());
+        }
+    }
+
     //get single file from Id
     @AuraEnabled(Cacheable=true) 
     public static ContentVersionWrapper getFileDataFromId(String Id) {
       try {
-        Long max = 1024 * 1024 * 15; // 25 MB
+        Long max = 1024 * 1024 * 10; // 1 MB
         ContentVersion cv = [SELECT Title, FileExtension, ContentSize, ContentDocumentId, LastModifiedDate FROM ContentVersion WHERE Id = :Id];
         ContentVersionWrapper cvw = new ContentVersionWrapper();
     
         cvw.Id = cv.Id;
         cvw.fileExtension = cv.FileExtension;
         cvw.fileName = cv.Title + '.' + cv.FileExtension;
-    
+        /*
         if(cv.ContentSize < max) {
           //Only query VersionData if size < 25 MB
           ContentVersion cvData = [SELECT VersionData FROM ContentVersion WHERE Id = :Id];
           cvw.body = EncodingUtil.base64Encode(cvData.VersionData);
         }else{
-          cvw.url = 'https://3d4ba3477c0a.ngrok-free.app/file/'+ cv.Id;
+          cvw.url = 'https://neatly-feasible-yeti.ngrok-free.app/file/'+ cv.Id;
         }
+        */
+        //Force proxy
+        cvw.url = 'https://neatly-feasible-yeti.ngrok-free.app/file/'+ cv.Id;
     
         return cvw;
       } catch(Exception e) {
